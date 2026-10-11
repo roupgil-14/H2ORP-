@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3954">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ECOVANNE</title>
+<style>
+  /* ===== COULEURS : modifie ici pour changer le visuel ===== */
+  :root {
+    --brand: #0b3954;       /* bandeau du haut */
+    --brand-ink: #ffffff;   /* texte du bandeau */
+    --accent: #f2b705;      /* boutons principaux */
+    --accent-ink: #1b1400;
+    --bg: #f1f5f7; --panel: #ffffff; --ink: #11222e; --muted: #5b7080; --line: #d5dfe5;
+    --ok: #2e7d4f; --warn: #b36b00; --bad: #c0392b; --water: #1c8fc4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0c1a24; --panel: #132836; --ink: #e6eff4; --muted: #8ba3b3; --line: #24404f; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  header { background: var(--brand); color: var(--brand-ink);
+           padding: calc(env(safe-area-inset-top) + 14px) 18px 14px; }
+  .bar { max-width: 460px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  #logo { width: 44px; height: 44px; flex: none; object-fit: contain; }
+  .names { flex: 1; min-width: 0; }
+  #brandName { margin: 0; font-size: 1.2rem; font-weight: 700; letter-spacing: .03em; }
+  #tagline { font-size: .8rem; opacity: .75; }
+  .link { font-size: .8rem; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .link.on { background: var(--ok); }
+  main { max-width: 460px; margin: 0 auto; padding: 8px 18px calc(env(safe-area-inset-bottom) + 40px); }
+
+  .hero { padding: 24px 0 18px; }
+  .flow { font-size: 4.8rem; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+  .flow small { font-size: 1.1rem; color: var(--muted); margin-left: 6px; font-weight: 400; }
+  .gauge { position: relative; height: 12px; margin: 18px 0 6px; border-radius: 6px; background: var(--line); }
+  .gauge .fill { height: 100%; width: 0; border-radius: 6px; background: var(--water); transition: width .6s ease, background .3s; }
+  .gauge .fill.over { background: var(--bad); }
+  .gauge .mark { position: absolute; top: -5px; bottom: -5px; width: 3px; background: var(--ink); border-radius: 2px; left: 30%; }
+  .gauge-legend { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); }
+  .state { display: inline-block; margin-top: 16px; padding: 6px 14px; border-radius: 999px;
+           font-size: .92rem; font-weight: 600; color: #fff; background: var(--muted); }
+  .state.MONITORING { background: var(--ok); }
+  .state.LOCKED { background: var(--bad); }
+  .state.OPENING, .state.CLOSING { background: var(--warn); }
+
+  .row { display: flex; justify-content: space-between; padding: 14px 0; border-top: 1px solid var(--line); }
+  .row span:first-child { color: var(--muted); }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 22px 0 10px; }
+  button { font: inherit; font-weight: 600; padding: 14px; border-radius: 10px; border: 1px solid var(--line);
+           background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  button.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--water); outline-offset: 2px; }
+  .thr { display: flex; gap: 10px; margin: 6px 0 22px; }
+  input { font: inherit; padding: 12px; border-radius: 10px; border: 1px solid var(--line);
+          background: var(--panel); color: var(--ink); width: 100%; }
+  .thr input { max-width: 110px; }
+  details { margin-top: 26px; }
+  summary { cursor: pointer; color: var(--muted); }
+  label { display: block; margin: 12px 0 4px; font-size: .85rem; color: var(--muted); }
+  .msg { margin-top: 10px; font-size: .85rem; color: var(--muted); min-height: 1.2em; }
+  footer { margin-top: 30px; text-align: center; font-size: .78rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <img id="logo" alt="">
+    <div class="names">
+      <h1 id="brandName">ECOVANNE</h1>
+      <div id="tagline"></div>
+    </div>
+    <span class="link" id="link">Déconnecté</span>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="flow"><span id="flow">–</span><small>L/min</small></div>
+    <div class="gauge" aria-hidden="true">
+      <div class="fill" id="fill"></div>
+      <div class="mark" id="mark"></div>
+    </div>
+    <div class="gauge-legend"><span>0</span><span id="markLabel">seuil</span><span>50 L/min</span></div>
+    <span class="state" id="state">Inconnu</span>
+  </section>
+
+  <div class="row"><span>Consommation</span><span id="total">–</span></div>
+  <div class="row"><span>Appareil</span><span id="status">–</span></div>
+  <div class="row"><span>Signal WiFi</span><span id="rssi">–</span></div>
+  <div class="row"><span>Seuil de fermeture</span><span id="thr">–</span></div>
+
+  <div class="actions">
+    <button class="primary" id="btnOpen">Ouvrir la vanne</button>
+    <button class="danger" id="btnClose">Fermer la vanne</button>
+  </div>
+
+  <label for="thrInput">Nouveau seuil (5 à 50 L/min)</label>
+  <div class="thr">
+    <input id="thrInput" type="number" min="5" max="50" step="1" inputmode="numeric">
+    <button id="btnThr">Enregistrer le seuil</button>
+  </div>
+
+  <div class="actions">
+    <button id="btnWifi">Changer le WiFi</button>
+    <button id="btnReset">Remettre la conso à 0</button>
+  </div>
+  <div class="msg" id="msg"></div>
+
+  <details id="cfg">
+    <summary>Connexion HiveMQ</summary>
+    <label for="host">Serveur (xxx.s1.eu.hivemq.cloud)</label>
+    <input id="host" autocomplete="off" autocapitalize="off">
+    <label for="user">Utilisateur</label>
+    <input id="user" autocomplete="off" autocapitalize="off">
+    <label for="pass">Mot de passe</label>
+    <input id="pass" type="password" autocomplete="off">
+    <label for="base">Topic de base</label>
+    <input id="base" autocomplete="off" autocapitalize="off" value="ecovanne/h2orp1">
+    <div class="actions"><button class="primary" id="btnConnect">Se connecter</button></div>
+  </details>
+
+  <footer id="footer"></footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+/* ===== MARQUE : modifie ici ton nom, ton texte et ton logo ===== */
+const BRAND = {
+  name: "ECOVANNE",
+  tagline: "Protection anti-fuite d'eau",
+  footer: "ECOVANNE · Normandie",
+  logo: ""   // vide = logo goutte par défaut ; sinon "logo.png" (fichier posé à côté de index.html)
+};
+
+const DEFAULT_LOGO = "data:image/svg+xml;utf8," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+  '<path d="M32 5C32 5 12 28 12 41a20 20 0 0 0 40 0C52 28 32 5 32 5Z" fill="#1c8fc4"/>' +
+  '<path d="M20 42h24" stroke="#f2b705" stroke-width="5" stroke-linecap="round"/>' +
+  '<path d="M32 34v16" stroke="#f2b705" stroke-width="5" stroke-linecap="round"/></svg>');
+
+const $ = id => document.getElementById(id);
+const LABELS = { OPENING: "Ouverture…", MONITORING: "Ouverte, surveillée", CLOSING: "Fermeture…", LOCKED: "Fermée (verrouillée)" };
+const MAX_FLOW = 50;
+let client = null, base = "", thrNow = 15, flowNow = 0;
+
+/* Application de la marque */
+$("brandName").textContent = BRAND.name;
+$("tagline").textContent = BRAND.tagline;
+$("footer").textContent = BRAND.footer;
+$("logo").src = BRAND.logo || DEFAULT_LOGO;
+document.title = BRAND.name;
+(function () {
+  const l = document.createElement("link");
+  l.rel = "apple-touch-icon"; l.href = BRAND.logo || DEFAULT_LOGO;
+  document.head.appendChild(l);
+  const f = document.createElement("link");
+  f.rel = "icon"; f.href = BRAND.logo || DEFAULT_LOGO;
+  document.head.appendChild(f);
+})();
+
+try {
+  const saved = JSON.parse(localStorage.getItem("ecv") || "{}");
+  for (const k of ["host", "user", "pass", "base"]) if (saved[k]) $(k).value = saved[k];
+} catch (e) {}
+
+function say(t) { $("msg").textContent = t; }
+function setLink(on) {
+  $("link").textContent = on ? "Connecté" : "Déconnecté";
+  $("link").classList.toggle("on", on);
+}
+function drawGauge() {
+  $("fill").style.width = Math.min(100, flowNow / MAX_FLOW * 100) + "%";
+  $("fill").classList.toggle("over", flowNow > thrNow);
+  $("mark").style.left = "calc(" + Math.min(100, thrNow / MAX_FLOW * 100) + "% - 1px)";
+  $("markLabel").textContent = "seuil " + thrNow;
+}
+function send(cmd) {
+  if (!client || !client.connected) { say("Pas de connexion au broker."); return; }
+  client.publish(base + "/cmd", cmd);
+  say("Commande envoyée : " + cmd);
+}
+
+function connect() {
+  const host = $("host").value.trim(), user = $("user").value.trim(), pass = $("pass").value;
+  base = $("base").value.trim().replace(/\/+$/, "");
+  if (!host || !base) { $("cfg").open = true; say("Renseigne le serveur et le topic de base."); return; }
+  try { localStorage.setItem("ecv", JSON.stringify({ host, user, pass, base })); } catch (e) {}
+  if (client) client.end(true);
+
+  client = mqtt.connect("wss://" + host + ":8884/mqtt", {
+    username: user, password: pass, clean: true, reconnectPeriod: 3000, connectTimeout: 8000
+  });
+  client.on("connect", () => { setLink(true); client.subscribe(base + "/#"); say(""); });
+  client.on("close", () => setLink(false));
+  client.on("error", e => say("Erreur : " + e.message));
+  client.on("message", (topic, payload) => {
+    const v = payload.toString(), k = topic.slice(base.length + 1);
+    if (k === "flow") { flowNow = parseFloat(v) || 0; $("flow").textContent = flowNow.toFixed(1); drawGauge(); }
+    else if (k === "state") { $("state").textContent = LABELS[v] || v; $("state").className = "state " + v; }
+    else if (k === "total") $("total").textContent = parseFloat(v).toFixed(1) + " L";
+    else if (k === "threshold") { thrNow = parseFloat(v) || thrNow; $("thr").textContent = v + " L/min"; $("thrInput").placeholder = v; drawGauge(); }
+    else if (k === "rssi") $("rssi").textContent = v + " dBm";
+    else if (k === "status") $("status").textContent = v === "online" ? "En ligne" : "Hors ligne";
+  });
+}
+
+$("btnConnect").onclick = connect;
+$("btnOpen").onclick = () => send("open");
+$("btnClose").onclick = () => { if (confirm("Fermer la vanne ?")) send("close"); };
+$("btnThr").onclick = () => {
+  const n = parseInt($("thrInput").value, 10);
+  if (!(n >= 5 && n <= 50)) { say("Le seuil doit être entre 5 et 50 L/min."); return; }
+  send("threshold=" + n);
+};
+$("btnWifi").onclick = () => {
+  if (confirm("Ouvrir le portail WiFi ? Connecte ensuite ton téléphone au réseau ECOVANNE-Config.")) send("wifi");
+};
+$("btnReset").onclick = () => { if (confirm("Remettre la consommation à 0 ?")) send("reset_total"); };
+
+drawGauge();
+if ($("host").value) connect(); else $("cfg").open = true;
+</script>
+</body>
+</html>
